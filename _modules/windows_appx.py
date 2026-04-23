@@ -24,7 +24,7 @@ def __virtual__():
 	return __virtualname__
 
 
-def get_appx_package(all_users=False):
+def get_appx_package(all_users=False, name=None, package_type_filter=None):
 	"""
 
 	:param all_users:
@@ -34,6 +34,10 @@ def get_appx_package(all_users=False):
 	kwargs = {}
 	if all_users:
 		kwargs['AllUsers'] = None
+	if name is not None:
+		kwargs['Name'] = f'"{name}"'
+	if package_type_filter is not None:
+		kwargs['PackageTypeFilter'] = package_type_filter
 
 	return __salt__['windows_powershell.run_from_components']('Get-AppxPackage', **kwargs)
 
