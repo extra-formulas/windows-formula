@@ -80,7 +80,19 @@ def all_packages_uninstalled(name):
 		ret['comment'] = 'Packages would be uninstalled'
 		ret['changes'].update({'to uninstall': [package['Name'] for package in installed_packages]})
 	else:
+
 		successes, failures = [], []
+
+		main_packages = [package for package in __salt__['windows_appx.get_appx_package'](all_users=True, package_type_filter='Main') if not package['NonRemovable']]
+		for package in main_packages:
+			try:
+				partial = __salt__['windows_appx.remove_appx_package'](package['PackageFullName'], all_users=True)
+			except Exception:
+				failures.append(package['Name'])
+			else:
+				successes.append(package['Name'])
+
+		installed_packages = [package for package in __salt__['windows_appx.get_appx_package'](all_users=True) if not package['NonRemovable']]
 		for package in installed_packages:
 			try:
 				partial = __salt__['windows_appx.remove_appx_package'](package['PackageFullName'], all_users=True)
