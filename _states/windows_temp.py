@@ -10,12 +10,12 @@ LOGGER = getLogger(__name__)
 __version__ = '0.1.0'
 
 
-def emptied(name, salt_user=True, system=True):
+def emptied(name, skip_salt_user=False, skip_system=False):
 	"""
 
 	:param name:
-	:param salt_user:
-	:param system:
+	:param skip_salt_user:
+	:param skip_system:
 	:return:
 	"""
 
@@ -26,19 +26,19 @@ def emptied(name, salt_user=True, system=True):
 		'comment': '',
 	}
 
-	if system:
+	if skip_system:
+		system_content = []
+	else:
 		system_dir = __salt__['reg.read_value']('HKEY_LOCAL_MACHINE', r'SYSTEM\CurrentControlSet\Control\Session Manager\Environment', 'TEMP')
 		system_dir = __salt__['cmd.shell'](f'echo {system_dir["vdata"]}')
 		system_content = [entry for entry in __salt__['file.readdir'](system_dir) if entry not in ('.', '..')]
-	else:
-		system_content = []
 
-	if salt_user:
+	if skip_salt_user:
+		user_content = []
+	else:
 		user_dir = __salt__['reg.read_value']('HKEY_CURRENT_USER', 'Environment', 'TEMP')
 		user_dir = __salt__['cmd.shell'](f'echo {user_dir["vdata"]}')
 		user_content = [entry for entry in __salt__['file.readdir'](user_dir) if entry not in ('.', '..')]
-	else:
-		user_content = []
 
 	if not (system_content + user_content):
 		ret['result'] = True
