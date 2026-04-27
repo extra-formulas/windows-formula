@@ -1,5 +1,7 @@
 windows:
   appx:
     remove_all: true
+  management:
+    clear_all_logs: true
   temp:
     empty_all: true
