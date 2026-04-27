@@ -1,3 +1,5 @@
 windows:
   appx:
     remove_all: true
+  temp:
+    empty_all: true
