@@ -10,11 +10,20 @@ stop_windows_update_service:
   service.dead:
     - name: {{ update_.service_name }}
 
+stop_cryptographic_service:
+  service.dead:
+    - name: {{ update_.crypt_service_name }}
+
 windows_update_cache_directories:
   windows_update.clean_cache_directories:
     - directories: {{ directories }}
     - require:
       - stop_windows_update_service
+      - stop_cryptographic_service
+
+start_cryptographic_service:
+  service.running:
+    - name: {{ update_.crypt_service_name }}
 
 start_windows_update_service:
   service.running:
