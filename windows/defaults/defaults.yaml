@@ -1,0 +1,5 @@
+update:
+  service_name: wuauserv
+  windows_update_cache_directories:
+    - '%SystemRoot%\SoftwareDistribution\Download'
+    - '%SystemRoot%\System32\catroot2'

@@ -5,3 +5,5 @@ windows:
     clear_all_logs: true
   temp:
     empty_all: true
+  update:
+    clear_cache: true
