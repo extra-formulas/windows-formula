@@ -18,11 +18,10 @@ def __virtual__():
 	Check PowerShell Appx module availability
 	"""
 
-	if not __salt__['windows_powershell.get_module'](name='Appx', list_available=True):
+	if not __salt__['windows_powershell.is_module_available'](name='Appx'):
 		return False, 'PowerShell Appx module not available'
 
 	return __virtualname__
-
 
 def get_appx_package(all_users=False, name=None, package_type_filter=None):
 	"""

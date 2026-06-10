@@ -8,6 +8,8 @@ from logging import getLogger
 
 from salt.exceptions import CommandExecutionError
 
+from powershell import PipedCommand, PowerShell
+
 
 LOGGER = getLogger(__name__)
 __version__ = '0.1.0'
@@ -24,6 +26,37 @@ def __virtual__():
 		return False, 'PowerShell not available'
 
 	return __virtualname__
+
+
+def _clean_kwargs(**kwargs):
+	"""
+
+	:param kwargs:
+	:return:
+	"""
+
+	return {key: value for key, value in kwargs.items() if key[:2] != '__'}
+
+
+def _salt_runner(command_string, /, **kwargs):
+	"""
+
+	:param command_string:
+	:param kwargs:
+	:return:
+	"""
+
+	kwargs['shell'] = 'powershell'
+	result = __salt__['cmd.run_all'](command_string, **kwargs)
+
+	if error := result.get('stderr', ''):
+		error = error.splitlines()[0]
+		raise CommandExecutionError(error, info=result)
+
+	if ('retcode' not in result) or result['retcode']:
+		raise CommandExecutionError('Unsuccessful execution of PowerShell command', info=result)
+
+	return result['stdout'], result['stderr'], result['retcode']
 
 
 class PowerShellCommand:
@@ -117,6 +150,18 @@ class PowerShellCommand:
 		return cls(cls.build_command_line(command, **kwargs))
 
 
+def is_module_available(name):
+	"""
+
+	:param name:
+	:return:
+	"""
+
+	LOGGER.warning('Modules include: %s', PowerShell(_salt_runner).modules.keys())
+
+	return name in PowerShell(_salt_runner).modules
+
+
 def get_module(name=None, list_available=False):
 	"""
 
@@ -136,7 +181,7 @@ def get_module(name=None, list_available=False):
 	return run_from_components('Get-Module', **kwargs)
 
 
-def run_command(command_string):
+def run_command(command_string, input_data=None, output_is_object=True, /, **kwargs):
 	"""Run a single liner
 	Provided a PowerShell command as a single liner, run it using the PowerShellCommand class.
 
@@ -146,8 +191,7 @@ def run_command(command_string):
 	:rtype: dict
 	"""
 
-	cmd = PowerShellCommand(command_string)
-	return cmd()
+	return PowerShell(_salt_runner)(command_string, input_data, output_is_object, **_clean_kwargs(**kwargs))
 
 
 def run_from_components(name, /, **kwargs):
@@ -158,5 +202,4 @@ def run_from_components(name, /, **kwargs):
 	:return:
 	"""
 
-	cmd = PowerShellCommand.from_components(name, **kwargs)
-	return cmd()
+	return PowerShell(_salt_runner)(str(PipedCommand.from_components(name, **_clean_kwargs(**kwargs))))
